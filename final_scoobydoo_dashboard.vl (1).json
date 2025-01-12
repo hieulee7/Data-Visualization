@@ -1,0 +1,559 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "data": {
+    "url": "https://raw.githubusercontent.com/hieulee7/Data-Visualization/refs/heads/main/updated_scoobydoo.csv"
+  },
+  "vconcat": [
+    {
+      "width": 1000,
+      "height": 400,
+      "mark": {"type": "circle", "stroke": "lightgray", "strokeWidth": 0.3},
+      "title": {
+        "text": "Scooby-Doo Series Evolution Explorer",
+        "anchor": "middle",
+        "fontSize": 24,
+        "subtitleFontSize": 14,
+        "offset": 20
+      },
+      "params": [
+        {
+          "name": "scatter_brush",
+          "select": {"type": "interval", "encodings": ["x"]}
+        },
+        {
+          "name": "legend_selection",
+          "select": {"type": "point", "fields": ["distribution_type"]},
+          "bind": "legend"
+        }
+      ],
+      "encoding": {
+        "x": {
+          "field": "date_aired",
+          "type": "temporal",
+          "scale": {"domain": ["1969-09-13", "2021-02-25"]},
+          "axis": {
+            "title": "Air Date",
+            "format": "%Y",
+            "tickCount": "year",
+            "grid": true
+          }
+        },
+        "y": {
+          "field": "imdb",
+          "type": "quantitative",
+          "scale": {"domain": [4, 10]},
+          "axis": {"title": "IMDb Score", "grid": true}
+        },
+        "size": {
+          "field": "engagement",
+          "type": "quantitative",
+          "scale": {
+            "type": "threshold",
+            "domain": [50, 500, 5000, 20000, 50000],
+            "range": [50, 100, 150, 200, 250, 350]
+          },
+          "legend": {"title": "IMDb Votes", "symbolType": "circle"}
+        },
+        "opacity": {
+          "condition": {
+            "test": {
+              "and": [
+                "!length(data('scatter_brush_store')) || vlSelectionTest('scatter_brush_store', datum)",
+                "!length(data('bar_selection_store')) || vlSelectionTest('bar_selection_store', datum, 'network')"
+              ]
+            },
+            "value": 1
+          },
+          "value": 0.1
+        },
+        "color": {
+          "condition": {
+            "param": "legend_selection",
+            "field": "distribution_type",
+            "title": "Distribution Type",
+            "type": "nominal",
+            "scale": {
+              "domain": [
+                "Broadcast",
+                "Syndication",
+                "Cable",
+                "Direct Distribution"
+              ],
+              "range": ["#785EF0", "#FE6100", "#DC267F", "#FFB000"]
+            }
+          },
+          "value": "lightgrey"
+        },
+        "tooltip": [
+          {"field": "title", "type": "nominal", "title": "Episode"},
+          {"field": "series_name", "type": "nominal", "title": "Series"},
+          {"field": "network", "type": "nominal", "title": "Network"},
+          {
+            "field": "distribution_type",
+            "type": "nominal",
+            "title": "Distribution Type"
+          },
+          {
+            "field": "date_aired",
+            "type": "temporal",
+            "title": "Air Date",
+            "format": "%B %d, %Y"
+          },
+          {
+            "field": "imdb",
+            "type": "quantitative",
+            "title": "IMDb Score",
+            "format": ".1f"
+          },
+          {
+            "field": "engagement",
+            "type": "quantitative",
+            "title": "IMDb Votes",
+            "format": ","
+          }
+        ]
+      }
+    },
+    {
+      "hconcat": [
+        {
+          "width": 500,
+          "height": 200,
+          "layer": [
+            {
+              "mark": {"type": "bar", "cornerRadius": 3, "cursor": "pointer"},
+              "transform": [
+                {"filter": {"param": "scatter_brush"}},
+                {"filter": {"param": "legend_selection"}}
+              ],
+              "params": [
+                {
+                  "name": "bar_selection",
+                  "select": {"type": "point", "fields": ["network"]}
+                }
+              ],
+              "encoding": {
+                "x": {
+                  "field": "network",
+                  "type": "nominal",
+                  "axis": {
+                    "title": null,
+                    "labelAngle": -45,
+                    "labelAlign": "right"
+                  },
+                  "scale": {
+                    "padding": 0.2,
+                    "domain": [
+                      "CBS",
+                      "ABC",
+                      "Syndication",
+                      "Cartoon Network",
+                      "Warner Home Video",
+                      "Warner Bros. Picture",
+                      "The WB",
+                      "The CW",
+                      "Boomerang"
+                    ]
+                  }
+                },
+                "y": {
+                  "aggregate": "count",
+                  "type": "quantitative",
+                  "title": "Number of Episodes",
+                  "scale": {"domain": [0, 300]}
+                },
+                "color": {
+                  "field": "distribution_type",
+                  "type": "nominal",
+                  "scale": {
+                    "domain": [
+                      "Broadcast",
+                      "Syndication",
+                      "Cable",
+                      "Direct Distribution"
+                    ],
+                    "range": ["#785EF0", "#FE6100", "#DC267F", "#FFB000"]
+                  }
+                },
+                "opacity": {
+                  "condition": {"param": "bar_selection", "value": 1},
+                  "value": 0.3
+                },
+                "tooltip": [
+                  {"field": "network", "type": "nominal", "title": "Network"},
+                  {
+                    "field": "distribution_type",
+                    "type": "nominal",
+                    "title": "Distribution Type"
+                  },
+                  {
+                    "aggregate": "count",
+                    "type": "quantitative",
+                    "title": "Episodes"
+                  }
+                ]
+              }
+            },
+            {
+              "mark": {"type": "text", "dy": -5},
+              "transform": [
+                {"filter": {"param": "scatter_brush"}},
+                {"filter": {"param": "legend_selection"}}
+              ],
+              "encoding": {
+                "x": {"field": "network", "type": "nominal"},
+                "y": {"aggregate": "count", "type": "quantitative"},
+                "text": {"aggregate": "count", "type": "quantitative"},
+                "opacity": {
+                  "condition": {"param": "bar_selection", "value": 1},
+                  "value": 0.3
+                }
+              }
+            }
+          ]
+        },
+        {
+          "width": 450,
+          "height": 200,
+          "layer": [
+            {
+              "transform": [
+                {"filter": {"param": "scatter_brush"}},
+                {"filter": {"param": "legend_selection"}},
+                {
+                  "aggregate": [
+                    {"op": "count", "as": "episode_count"},
+                    {"op": "mean", "field": "imdb", "as": "mean_rating"},
+                    {"op": "q1", "field": "imdb", "as": "q1"},
+                    {"op": "q3", "field": "imdb", "as": "q3"},
+                    {"op": "median", "field": "imdb", "as": "median"},
+                    {"op": "min", "field": "imdb", "as": "min"},
+                    {"op": "max", "field": "imdb", "as": "max"}
+                  ],
+                  "groupby": ["network", "distribution_type"]
+                },
+                {
+                  "calculate": "datum.episode_count <= 2 ? 'small' : 'large'",
+                  "as": "sample_size"
+                },
+                {"filter": "datum.sample_size === 'large'"}
+              ],
+              "mark": {"type": "rule", "size": 2},
+              "encoding": {
+                "x": {
+                  "field": "network",
+                  "type": "nominal",
+                  "scale": {
+                    "domain": [
+                      "CBS",
+                      "ABC",
+                      "Syndication",
+                      "Cartoon Network",
+                      "Warner Home Video",
+                      "Warner Bros. Picture",
+                      "The WB",
+                      "The CW",
+                      "Boomerang"
+                    ]
+                  },
+                  "axis": {
+                    "title": null,
+                    "labelAngle": -45,
+                    "labelAlign": "right"
+                  }
+                },
+                "y": {
+                  "field": "min",
+                  "type": "quantitative",
+                  "scale": {"domain": [4, 10]},
+                  "axis": {"title": "Median IMDb Score"}
+                },
+                "y2": {"field": "max"},
+                "opacity": {
+                  "condition": {"param": "bar_selection", "value": 1},
+                  "value": 0.3
+                },
+                "tooltip": [
+                  {"field": "network", "type": "nominal", "title": "Network"},
+                  {
+                    "field": "episode_count",
+                    "type": "quantitative",
+                    "title": "Episodes"
+                  },
+                  {
+                    "field": "median",
+                    "type": "quantitative",
+                    "title": "Median Score",
+                    "format": ".1f"
+                  },
+                  {
+                    "field": "min",
+                    "type": "quantitative",
+                    "title": "Min Score",
+                    "format": ".1f"
+                  },
+                  {
+                    "field": "max",
+                    "type": "quantitative",
+                    "title": "Max Score",
+                    "format": ".1f"
+                  },
+                  {
+                    "field": "q1",
+                    "type": "quantitative",
+                    "title": "25th Percentile",
+                    "format": ".1f"
+                  },
+                  {
+                    "field": "q3",
+                    "type": "quantitative",
+                    "title": "75th Percentile",
+                    "format": ".1f"
+                  }
+                ]
+              }
+            },
+            {
+              "transform": [
+                {"filter": {"param": "scatter_brush"}},
+                {"filter": {"param": "legend_selection"}},
+                {
+                  "aggregate": [
+                    {"op": "count", "as": "episode_count"},
+                    {"op": "q1", "field": "imdb", "as": "q1"},
+                    {"op": "q3", "field": "imdb", "as": "q3"},
+                    {"op": "median", "field": "imdb", "as": "median"}
+                  ],
+                  "groupby": ["network", "distribution_type"]
+                },
+                {
+                  "calculate": "datum.episode_count <= 2 ? 'small' : 'large'",
+                  "as": "sample_size"
+                },
+                {"filter": "datum.sample_size === 'large'"}
+              ],
+              "mark": {"type": "bar", "size": 20},
+              "encoding": {
+                "x": {"field": "network", "type": "nominal"},
+                "y": {"field": "q1", "type": "quantitative"},
+                "y2": {"field": "q3"},
+                "color": {
+                  "field": "distribution_type",
+                  "type": "nominal",
+                  "scale": {
+                    "domain": [
+                      "Broadcast",
+                      "Syndication",
+                      "Cable",
+                      "Direct Distribution"
+                    ],
+                    "range": ["#785EF0", "#FE6100", "#DC267F", "#FFB000"]
+                  }
+                },
+                "opacity": {
+                  "condition": {"param": "bar_selection", "value": 1},
+                  "value": 0.3
+                },
+                "tooltip": [
+                  {"field": "network", "type": "nominal", "title": "Network"},
+                  {
+                    "field": "episode_count",
+                    "type": "quantitative",
+                    "title": "Episodes"
+                  },
+                  {
+                    "field": "median",
+                    "type": "quantitative",
+                    "title": "Median Score",
+                    "format": ".1f"
+                  },
+                  {
+                    "field": "q1",
+                    "type": "quantitative",
+                    "title": "25th Percentile",
+                    "format": ".1f"
+                  },
+                  {
+                    "field": "q3",
+                    "type": "quantitative",
+                    "title": "75th Percentile",
+                    "format": ".1f"
+                  }
+                ]
+              }
+            },
+            {
+              "transform": [
+                {"filter": {"param": "scatter_brush"}},
+                {"filter": {"param": "legend_selection"}},
+                {
+                  "aggregate": [
+                    {"op": "count", "as": "episode_count"},
+                    {"op": "median", "field": "imdb", "as": "median"}
+                  ],
+                  "groupby": ["network", "distribution_type"]
+                },
+                {
+                  "calculate": "datum.episode_count <= 2 ? 'small' : 'large'",
+                  "as": "sample_size"
+                },
+                {"filter": "datum.sample_size === 'large'"}
+              ],
+              "mark": {"type": "tick", "color": "white", "size": 20},
+              "encoding": {
+                "x": {"field": "network", "type": "nominal"},
+                "y": {"field": "median", "type": "quantitative"},
+                "opacity": {
+                  "condition": {"param": "bar_selection", "value": 1},
+                  "value": 0.3
+                }
+              }
+            },
+            {
+              "transform": [
+                {"filter": {"param": "scatter_brush"}},
+                {"filter": {"param": "legend_selection"}},
+                {
+                  "aggregate": [
+                    {"op": "count", "as": "episode_count"},
+                    {"op": "median", "field": "imdb", "as": "median"}
+                  ],
+                  "groupby": ["network", "distribution_type"]
+                },
+                {
+                  "calculate": "datum.episode_count <= 2 ? 'small' : 'large'",
+                  "as": "sample_size"
+                },
+                {"filter": "datum.sample_size === 'large'"}
+              ],
+              "mark": {
+                "type": "text",
+                "align": "left",
+                "dx": 14,
+                "fontSize": 10
+              },
+              "encoding": {
+                "x": {"field": "network", "type": "nominal"},
+                "y": {"field": "median", "type": "quantitative"},
+                "text": {
+                  "field": "median",
+                  "type": "quantitative",
+                  "format": ".1f"
+                },
+                "opacity": {
+                  "condition": {"param": "bar_selection", "value": 1},
+                  "value": 0.3
+                }
+              }
+            },
+            {
+              "transform": [
+                {"filter": {"param": "scatter_brush"}},
+                {"filter": {"param": "legend_selection"}},
+                {
+                  "aggregate": [
+                    {"op": "count", "as": "episode_count"},
+                    {"op": "mean", "field": "imdb", "as": "mean_rating"}
+                  ],
+                  "groupby": ["network", "distribution_type"]
+                },
+                {
+                  "calculate": "datum.episode_count <= 2 ? 'small' : 'large'",
+                  "as": "sample_size"
+                },
+                {"filter": "datum.sample_size === 'small'"}
+              ],
+              "mark": {
+                "type": "point",
+                "shape": "diamond",
+                "size": 100,
+                "filled": true
+              },
+              "encoding": {
+                "x": {"field": "network", "type": "nominal"},
+                "y": {"field": "mean_rating", "type": "quantitative"},
+                "color": {
+                  "field": "distribution_type",
+                  "type": "nominal",
+                  "scale": {
+                    "domain": [
+                      "Broadcast",
+                      "Syndication",
+                      "Cable",
+                      "Direct Distribution"
+                    ],
+                    "range": ["#785EF0", "#FE6100", "#DC267F", "#FFB000"]
+                  }
+                },
+                "opacity": {
+                  "condition": {"param": "bar_selection", "value": 1},
+                  "value": 0.3
+                },
+                "tooltip": [
+                  {"field": "network", "type": "nominal", "title": "Network"},
+                  {
+                    "field": "mean_rating",
+                    "type": "quantitative",
+                    "title": "Avg. Score (if Episodes < 3)",
+                    "format": ".1f"
+                  },
+                  {
+                    "field": "episode_count",
+                    "type": "quantitative",
+                    "title": "Episodes"
+                  }
+                ]
+              }
+            },
+            {
+              "transform": [
+                {"filter": {"param": "scatter_brush"}},
+                {"filter": {"param": "legend_selection"}},
+                {
+                  "aggregate": [
+                    {"op": "count", "as": "episode_count"},
+                    {"op": "mean", "field": "imdb", "as": "mean_rating"}
+                  ],
+                  "groupby": ["network", "distribution_type"]
+                },
+                {
+                  "calculate": "datum.episode_count <= 2 ? 'small' : 'large'",
+                  "as": "sample_size"
+                },
+                {"filter": "datum.sample_size === 'small'"}
+              ],
+              "mark": {
+                "type": "text",
+                "align": "left",
+                "dx": 12,
+                "fontSize": 10
+              },
+              "encoding": {
+                "x": {"field": "network", "type": "nominal"},
+                "y": {"field": "mean_rating", "type": "quantitative"},
+                "text": {
+                  "field": "mean_rating",
+                  "type": "quantitative",
+                  "format": ".1f"
+                },
+                "opacity": {
+                  "condition": {"param": "bar_selection", "value": 1},
+                  "value": 0.3
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "config": {
+    "view": {"stroke": null},
+    "axis": {
+      "titleFontSize": 16,
+      "titlePadding": 10,
+      "labelFontSize": 12,
+      "gridOpacity": 0.3
+    }
+  }
+}
